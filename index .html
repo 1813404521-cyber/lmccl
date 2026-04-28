@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>莲咪抽抽乐</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --shell-purple: #9D78C2;
+            --taro-purple: #CFAEE0;
+            --moon-white: #F8F7FC;
+            --star-silver: #E5E1F0;
+            --champagne: #F2E8D8;
+            --deep-purple: #7A5CA8;
+            --soft-purple: #EAD6F5;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        @keyframes pearlGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(207,174,224,0.4), 0 0 24px rgba(157,120,194,0.2); }
+            50% { box-shadow: 0 0 20px rgba(207,174,224,0.7), 0 0 40px rgba(157,120,194,0.35), 0 0 60px rgba(242,232,216,0.2); }
+        }
+        @keyframes starPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.3) rotate(15deg); }
+        }
+        @keyframes drift {
+            0% { opacity: 0; transform: translate(0,0) scale(0); }
+            30% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1); }
+            100% { opacity: 0; transform: translate(calc(var(--tx)*1.5), calc(var(--ty)*1.5)) scale(0); }
+        }
+        @keyframes shake {
+            0% { transform: rotateX(8deg) rotateY(-8deg) rotateZ(-4deg); }
+            25% { transform: rotateX(-8deg) rotateY(8deg) rotateZ(4deg); }
+            50% { transform: rotateX(8deg) rotateY(8deg) rotateZ(-4deg); }
+            75% { transform: rotateX(-8deg) rotateY(-8deg) rotateZ(4deg); }
+            100% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+        }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes popIn {
+            0% { opacity:0; transform: scale(0.6) translateY(20px); }
+            100% { opacity:1; transform: scale(1) translateY(0); }
+        }
+        @keyframes bubbleFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            33% { transform: translateY(-20px) scale(1.05); opacity: 0.9; }
+            66% { transform: translateY(-10px) scale(0.97); opacity: 0.75; }
+        }
+        @keyframes ringPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.15); opacity: 0.15; }
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--moon-white);
+            overflow-x: hidden;
+        }
+
+        /* === BACKGROUND === */
+        .bg-layer {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background: linear-gradient(160deg, #F8F7FC 0%, #EDD8F7 35%, #E5E1F0 60%, #F2E8D8 100%);
+        }
+        .bg-orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(60px); opacity: 0.5;
+        }
+        .bg-orb-1 { width: 340px; height: 340px; top: -80px; right: -60px; background: radial-gradient(circle, #CFAEE0 0%, transparent 70%); animation: bubbleFloat 7s ease-in-out infinite; }
+        .bg-orb-2 { width: 280px; height: 280px; bottom: 10%; left: -80px; background: radial-gradient(circle, #9D78C2 0%, transparent 70%); animation: bubbleFloat 9s ease-in-out infinite 2s; }
+        .bg-orb-3 { width: 200px; height: 200px; top: 50%; right: 5%; background: radial-gradient(circle, #F2E8D8 0%, transparent 70%); animation: bubbleFloat 6s ease-in-out infinite 1s; }
+
+        /* === FLOATING STARS === */
+        .stars-field {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+        }
+        .star-dot {
+            position: absolute; border-radius: 50%;
+            background: var(--champagne);
+            animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+        }
+
+        /* === MAIN CONTAINER === */
+        .main-container {
+            position: relative; z-index: 2;
+            width: 100%; min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding: 40px 16px 60px;
+        }
+
+        /* === HEADER === */
+        .header {
+            text-align: center; margin-bottom: 28px;
+            position: relative;
+        }
+
+        .header-deco {
+            display: flex; justify-content: center; align-items: center;
+            gap: 14px; margin-bottom: 10px;
+        }
+        .star-item {
+            font-size: 16px;
+            animation: starPulse var(--dur, 2.5s) ease-in-out infinite var(--delay, 0s);
+        }
+
+        /* LAY logo area */
+        .lay-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--champagne) 0%, #EDD8F7 100%);
+            border: 1.5px solid var(--taro-purple);
+            border-radius: 20px; padding: 4px 14px;
+            margin-bottom: 12px;
+            font-size: 11px; font-weight: 700;
+            color: var(--deep-purple);
+            letter-spacing: 2px;
+            box-shadow: 0 2px 10px rgba(157,120,194,0.18);
+        }
+
+        .title {
+            font-size: clamp(32px, 9vw, 52px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #9D78C2 0%, #C490E0 40%, #CFAEE0 70%, #F2E8D8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 3px; margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: clamp(12px, 3.2vw, 14px);
+            color: var(--shell-purple);
+            font-weight: 500; letter-spacing: 0.5px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .shell-spin {
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Pearl decoration line */
+        .pearl-line {
+            display: flex; justify-content: center; align-items: center;
+            gap: 6px; margin-top: 14px;
+        }
+        .pearl {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: linear-gradient(135deg, #fff 30%, var(--taro-purple));
+            box-shadow: 0 2px 6px rgba(207,174,224,0.5);
+        }
+        .pearl.lg { width: 12px; height: 12px; }
+        .pearl-dash { width: 24px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--taro-purple), transparent); }
+
+        /* === BOXES CONTAINER === */
+        .boxes-wrapper {
+            position: relative; width: 100%; max-width: 440px;
+        }
+        /* Bubble border effect */
+        .boxes-wrapper::before {
+            content: '';
+            position: absolute; inset: -8px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(207,174,224,0.3), rgba(157,120,194,0.15), rgba(242,232,216,0.3));
+            animation: ringPulse 3s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .boxes-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(12px, 4vw, 22px);
+            padding: 24px;
+            background: rgba(248, 247, 252, 0.75);
+            border-radius: 24px;
+            border: 2px solid rgba(229,225,240,0.8);
+            backdrop-filter: blur(16px);
+            box-shadow:
+                0 8px 32px rgba(157,120,194,0.12),
+                0 2px 8px rgba(207,174,224,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        /* === BOX === */
+        .box {
+            width: 100%; aspect-ratio: 1;
+            border-radius: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(30px, 8vw, 44px);
+            position: relative; overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            background: linear-gradient(145deg, #F0E2F7 0%, #DFC8EF 50%, #CFAEE0 100%);
+            border: 2.5px solid rgba(229,225,240,0.9);
+            box-shadow:
+                0 6px 20px rgba(157,120,194,0.22),
+                inset 0 2px 0 rgba(255,255,255,0.6),
+                inset 0 -2px 6px rgba(157,120,194,0.15);
+            animation: pearlGlow 3s ease-in-out infinite;
+        }
+
+        /* Gloss overlay */
+        .box::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 55%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 18px 18px 40% 40%;
+            pointer-events: none; z-index: 2;
+        }
+        /* Champagne gold accent corner */
+        .box::after {
+            content: '✦';
+            position: absolute; top: 6px; right: 8px;
+            font-size: 10px; color: var(--champagne);
+            opacity: 0.8; z-index: 3;
+            animation: starPulse 2.5s ease-in-out infinite;
+        }
+
+        .box-content {
+            position: relative; z-index: 4;
+            display: flex; align-items: center; justify-content: center;
+            filter: drop-shadow(0 2px 4px rgba(157,120,194,0.3));
+        }
+
+        .box:hover:not(.opened) {
+            transform: translateY(-12px) scale(1.1);
+            box-shadow:
+                0 16px 40px rgba(157,120,194,0.35),
+                0 6px 16px rgba(207,174,224,0.3),
+                inset 0 2px 0 rgba(255,255,255,0.7),
+                inset 0 -2px 6px rgba(157,120,194,0.2);
+        }
+        .box:active:not(.opened) {
+            transform: translateY(-4px) scale(1.03);
+        }
+        .box.opened {
+            opacity: 0.45; cursor: not-allowed;
+            background: linear-gradient(145deg, #EDE0F5 0%, #E0D0EC 100%);
+            animation: none;
+            box-shadow: 0 2px 8px rgba(157,120,194,0.1);
+        }
+        .box.shaking { animation: shake 0.5s ease-in-out; }
+
+        /* Box number badge */
+        .box-num {
+            position: absolute; bottom: 6px; left: 0; right: 0;
+            text-align: center; font-size: 10px; font-weight: 700;
+            color: rgba(122,92,168,0.6); z-index: 4;
+            letter-spacing: 1px;
+        }
+
+        /* === SPARKLES === */
+        .sparkle {
+            position: fixed; pointer-events: none; z-index: 9999; font-weight: bold;
+        }
+
+        /* === PROGRESS === */
+        .progress-area {
+            margin-top: 20px; text-align: center;
+        }
+        .progress-dots {
+            display: flex; justify-content: center; align-items: center;
+            gap: 16px; margin-bottom: 8px;
+        }
+        .progress-dot {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: rgba(229,225,240,0.6);
+            border: 2px solid rgba(207,174,224,0.5);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        .progress-dot.filled {
+            background: linear-gradient(135deg, #9D78C2, #CFAEE0);
+            border-color: #9D78C2;
+            box-shadow: 0 0 10px rgba(157,120,194,0.5);
+        }
+        .progress-dot.filled::after {
+            content: '✦';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 9px; color: white;
+        }
+        .progress-text {
+            font-size: 12px; color: var(--shell-purple); font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* === MODAL === */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(122, 92, 168, 0.25);
+            backdrop-filter: blur(12px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: linear-gradient(160deg, var(--moon-white) 0%, #F5EDFC 50%, var(--champagne) 100%);
+            border-radius: 28px; padding: 44px 36px 36px;
+            max-width: 680px; width: 92%; max-height: 88vh; overflow-y: auto;
+            box-shadow:
+                0 24px 60px rgba(157,120,194,0.3),
+                0 8px 24px rgba(207,174,224,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            border: 2px solid rgba(207,174,224,0.5);
+        }
+
+        /* Modal top decoration */
+        .modal-content::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #9D78C2, #CFAEE0, #F2E8D8, #CFAEE0, #9D78C2);
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+            border-radius: 28px 28px 0 0;
+        }
+
+        .close-btn {
+            position: absolute; top: 18px; right: 18px;
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--champagne), var(--soft-purple));
+            border: 2px solid var(--taro-purple);
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--shell-purple);
+            transition: all 0.2s ease; font-weight: bold;
+            box-shadow: 0 3px 10px rgba(157,120,194,0.2);
+        }
+        .close-btn:hover {
+            background: var(--taro-purple); color: white; transform: scale(1.1) rotate(90deg);
+        }
+
+        .modal-header {
+            text-align: center; margin-bottom: 28px; position: relative;
+        }
+
+        /* Halo behind emoji */
+        .modal-halo {
+            position: absolute; width: 90px; height: 90px;
+            background: radial-gradient(circle, rgba(207,174,224,0.3) 0%, transparent 70%);
+            border-radius: 50%; top: -18px; left: 50%; transform: translateX(-50%);
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        .modal-emoji {
+            font-size: 52px; margin-bottom: 8px;
+            display: block; position: relative; z-index: 1;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 12px rgba(157,120,194,0.3));
+        }
+        .modal-title {
+            font-size: 18px; font-weight: 800;
+            background: linear-gradient(135deg, #7A5CA8, #CFAEE0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 6px;
+        }
+        .modal-intro {
+            font-size: 12px; color: var(--taro-purple); font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Rarity badge */
+        .rarity-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: linear-gradient(135deg, var(--champagne), #F5E8CC);
+            border: 1.5px solid rgba(242,232,216,0.8);
+            border-radius: 20px; padding: 4px 12px; margin-top: 10px;
+            font-size: 11px; font-weight: 700; color: #8B6914;
+            box-shadow: 0 2px 8px rgba(242,232,216,0.5);
+            letter-spacing: 1px;
+        }
+
+        /* Pearl divider */
+        .pearl-divider {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin: 20px 0;
+        }
+        .pd-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--star-silver), transparent); }
+        .pd-pearl { width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, #fff 30%, var(--taro-purple)); box-shadow: 0 1px 4px rgba(207,174,224,0.5); }
+
+        .image-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(245,240,252,0.9) 100%);
+            border: 2px dashed rgba(207,174,224,0.6);
+            border-radius: 20px; padding: 24px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 260px; margin-bottom: 24px;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 2px 12px rgba(157,120,194,0.06);
+        }
+        .image-section::before {
+            content: '✦';
+            position: absolute; font-size: 80px;
+            color: rgba(207,174,224,0.08);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .image-display {
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, #fff 0%, var(--moon-white) 100%);
+            border-radius: 20px; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 96px;
+            box-shadow:
+                0 8px 24px rgba(157,120,194,0.18),
+                0 2px 8px rgba(207,174,224,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            overflow: hidden; position: relative; z-index: 1;
+            border: 2px solid rgba(229,225,240,0.8);
+        }
+
+        .concept-label {
+            font-size: 11px; color: var(--shell-purple);
+            font-weight: 700; letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-label {
+            font-size: 11px; color: var(--shell-purple);
+            margin-bottom: 8px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .section-label::before, .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--star-silver));
+        }
+        .section-label::after { background: linear-gradient(90deg, var(--star-silver), transparent); }
+
+        .description-section { margin-bottom: 20px; }
+
+        .description-input {
+            width: 100%; padding: 14px 16px;
+            border: 2px solid var(--star-silver);
+            border-radius: 16px; font-family: inherit;
+            font-size: 14px; resize: vertical; min-height: 130px;
+            color: #333;
+            background: rgba(255,255,255,0.85);
+            transition: all 0.25s ease; line-height: 1.6;
+        }
+        .description-input:focus {
+            outline: none; border-color: var(--taro-purple);
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(207,174,224,0.15);
+        }
+        .description-input::placeholder { color: rgba(157,120,194,0.45); }
+
+        .button-group { display: flex; gap: 12px; justify-content: center; }
+
+        .btn {
+            padding: 12px 28px; border-radius: 14px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #9D78C2 0%, #B890D8 100%);
+            color: #fff; border: 2px solid transparent;
+            box-shadow: 0 6px 20px rgba(157,120,194,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.04);
+            box-shadow: 0 10px 28px rgba(157,120,194,0.4);
+            background: linear-gradient(135deg, #8B68B0 0%, #CFAEE0 100%);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.7);
+            color: var(--shell-purple);
+            border: 2px solid var(--star-silver);
+        }
+        .btn-secondary:hover {
+            background: var(--champagne);
+            border-color: var(--taro-purple);
+            transform: translateY(-2px);
+        }
+
+        /* === FOOTER === */
+        .footer {
+            position: fixed; bottom: 12px; right: 16px;
+            font-size: 10px; color: rgba(157,120,194,0.7);
+            font-weight: 600; z-index: 5; letter-spacing: 1px;
+            background: rgba(248,247,252,0.8); backdrop-filter: blur(8px);
+            padding: 4px 10px; border-radius: 20px;
+            border: 1px solid rgba(229,225,240,0.5);
+        }
+
+        @media (max-width: 480px) {
+            .modal-content { padding: 36px 20px 28px; }
+            .btn { padding: 10px 20px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Ambient BG -->
+<div class="bg-layer">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+</div>
+
+<!-- Floating stars field -->
+<div class="stars-field" id="starsField"></div>
+
+<div class="main-container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="lay-badge">✦ 请关注咩咩放映机抽抽乐 ✦</div>
+
+        <div class="header-deco">
+            <span class="star-item" style="--dur:2.1s;--delay:0s">✦</span>
+            <span class="star-item" style="--dur:2.8s;--delay:0.3s">🪷</span>
+            <span class="star-item" style="--dur:2.3s;--delay:0.6s">✦</span>
+            <span class="star-item" style="--dur:3.1s;--delay:0.2s">🌟</span>
+            <span class="star-item" style="--dur:2.5s;--delay:0.9s">✦</span>
+        </div>
+
+        <div class="title">莲咪抽抽乐</div>
+
+        <div class="subtitle">
+            <span class="shell-spin">🐚</span>
+            三次机会敬请把握
+            <span class="shell-spin" style="animation-delay:1s">🐚</span>
+        </div>
+
+        <div class="pearl-line">
+            <div class="pearl-dash"></div>
+            <div class="pearl"></div>
+            <div class="pearl lg"></div>
+            <div class="pearl"></div>
+            <div class="pearl lg"></div>
+            <div class="pearl"></div>
+            <div class="pearl-dash"></div>
+        </div>
+    </div>
+
+    <!-- BOXES -->
+    <div class="boxes-wrapper">
+        <div class="boxes-container" id="boxesContainer"></div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-area" id="progressArea">
+        <div class="progress-dots">
+            <div class="progress-dot" id="dot0"></div>
+            <div class="progress-dot" id="dot1"></div>
+            <div class="progress-dot" id="dot2"></div>
+        </div>
+        <div class="progress-text" id="progressText">本轮 0 / 3</div>
+    </div>
+</div>
+
+<div class="footer">首发豆瓣魔芋爽</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal()">×</button>
+
+        <div class="modal-header">
+            <div class="modal-halo"></div>
+            <span class="modal-emoji" id="modalEmoji">🐚</span>
+            <h2 class="modal-title" id="modalTitle">贝壳的故事</h2>
+            <p class="modal-intro" id="modalIntro">来自深海的礼物</p>
+            <div class="rarity-badge" id="rarityBadge">✦ 珍藏款 ✦</div>
+        </div>
+
+        <div class="pearl-divider">
+            <div class="pd-line"></div>
+            <div class="pd-pearl"></div>
+            <div class="pd-pearl"></div>
+            <div class="pd-pearl"></div>
+            <div class="pd-line"></div>
+        </div>
+
+        <div class="image-section">
+            <div class="concept-label">✦ 概念</div>
+            <div class="image-display" id="imageDisplay">🐚</div>
+        </div>
+
+        <div class="description-section">
+            <div class="section-label">✦ 详情</div>
+            <textarea class="description-input" id="descriptionInput" placeholder="写下你的专属解说词，记录这一刻的心情 ✨"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="closeModal()">✓ 完成</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const boxData = [
+        { emoji: '👞', title: '张PD的皮鞋', intro: '百万lxs的梦', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777352564507_2.png', desc: '哇塞，开天PD出场了！全世界的followers和百场演唱会把氛围烘托到极致，没想到最震撼你的是他的风衣皮鞋。PD踩我～' },
+        { emoji: '🌧️', title: '北京的雨', intro: '等一个会回来的人', rarity: '✦ 稀有款 ✦', image: 'https://i2.hdslb.com/bfs/archive/ca06346d658fd6a5205d8fed0e26db4a2e18eb1b.jpg', desc: '你搬去了哪？我还在你楼下淋着雨。\n这场北京的雨什么时候会停呢？等他唱响鸟巢的时候，天就会放晴啦。' },
+        { emoji: '🕺', title: '跳舞沙袋', intro: '练习生之神的诞生', rarity: '✦ 经典款 ✦', image: 'http://k.sinaimg.cn/n/sinacn10121/166/w1024h742/20191120/2b18-iipztff7106083.jpg/w700d1q75cms.jpg', desc: '来到你面前的这条路，他走了很远，走得很辛苦。还好，以后可以一起走了。' },
+        { emoji: '👙', title: '平角裤', intro: '这是我自己的我就带走吧，没洗的', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777354547990_3.png', desc: '"这一看年轻人的气息""你还闻出气息了？"别刷流氓了小莲要哭了！' },
+        { emoji: '💡', title: '紫光灯', intro: '性感的肌肉线条', rarity: '✦ 经典款 ✦', image: 'https://img.heliar.top/file/1777355968613_QQ20260428-145903.png', desc: '本来以为是限定款，结果混成了经典款。怎么又修好了？' },
+        { emoji: '🎬', title: '一部动画电影', intro: '在爱的记忆消失以前,请记住我', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777356361365_IMG_1551.JPG', desc: '你已经忘了电影说的是什么，但还记得他睡着时浅浅的呼吸，祈祷他做个好梦的心情。' },
+        { emoji: '🌙', title: '月亮粑粑', intro: '树欲静而风不止', rarity: '✦ 经典款 ✦', image: 'https://img.heliar.top/file/1777357796687_6.png', desc: '是乡愁是游子断肠，是心底的一场海啸。"辞家千里又千里，务必争气再争气。比泪水更汹涌的是他的勇气。他乡的风雨，这么多年都没停。他也不会困在雨里。"' },
+        { emoji: '🦞', title: '龙虾项链', intro: '迷途的羔羊', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777357990891_BFFCB626D596D618C518038AB6B8B02A.jpg', desc: '即使全世界都背叛了他，也要保护他到最后一刻。我们说好了。' },
+        { emoji: '💎', title: '胸针花', intro: '太阳出来我爬山坡', rarity: '✦ 限定款 ✦', image: 'https://pic.rmb.bdstatic.com/bjh/3ea105585878/260108/fa9baeb40452489f61ec58f34b04b2f3.jpeg', desc: '全世界都在关心大花轿的腹肌和嗨丝，谁又知道这朵花是什么色。喂喂这可是钻石的，难道不是最闪的吗？' },
+        { emoji: '💚', title: '绿钻', intro: '送你的小小礼物', rarity: '✦ 稀有款 ✦', image: 'https://img.heliar.top/file/1777358888733_WX20260428-154750_2x.png', desc: '对焦在爱最深刻瞬间，“只要是你们为我取得的奖杯，不管在哪里领，我都会很开心。”‌' },
+        { emoji: '🚜', title: '拖拉机', intro: '晃！晃！晃！', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777361786978_WX20260428-163607_2x.png', desc: '好想和莲莲一起种田。你耕田来我织布，我挑水来你浇园，寒窑虽破能避风雨，夫妻恩爱苦也甜～' },
+        { emoji: '🚩', title: '忠诚卫士锦旗', intro: '全世界最讨人嫌', rarity: '✦ 限定款 ✦', image: 'https://img.heliar.top/file/1777351652762_1.png', desc: '一只穿白衣服的小羊掉进水里了，全世界翘首以盼他湿身，结果一个三次元马赛克出现了。这对吗？' },
+        { emoji: '💽', title: '飞天MV录影', intro: '失而复得！', rarity: '✦ 稀有款 ✦', image: 'https://img.heliar.top/file/1777360016312_QQ20260428-160634.png', desc: '你经历了九九八十一难，终于在沙漠里抢救出了飞天的MV，顺便把休息室爆锤了一顿。小莲感动哭了。' },
+        { emoji: '🍯', title: '蜂蜜黄油薯片', intro: 'Shanghai to L.A I’m a trensetter', rarity: '✦ 经典款 ✦', image: 'https://img.heliar.top/file/1777361682559_005S1fSgly1ib15rp1v2pj31hc0u078z.jpg', desc: '写Honey和爱吃蜂蜜黄油薯片有什么关系吗？也许有呢。都很甜而且都很性感呀～' },
+        { emoji: '📑', title: '单词本', intro: '你究竟学了没？', rarity: '✦ 经典款 ✦', image: 'https://img.heliar.top/file/1777360269565_WX20260428-161049_2x.png', desc: '看到提醒兴致冲冲跑回🏠，发现新动态又是单词。英语班班长都这么性感了，再不学真的要拿鞭子抽了哦！' },
+        { emoji: '🚢', title: '永不下船的票', intro: '我愿意', rarity: '✦ 珍藏款 ✦', image: 'https://img.heliar.top/file/1777362138600_QQ20260428-164208.png', desc: '航行未抵达终点，属于我们的故事还在连载。如果我有一张船票，你还愿意跟我走吗？' }
+    ];
+
+    let openedBoxes = new Set(); // 总体打开的盒子（用于进度条）
+    let currentRound = [];       // 当前轮次抽中的索引
+    let openCount = 0;
+    const MAX_OPEN = 3;
+
+    // Generate star dots
+    (function() {
+        const field = document.getElementById('starsField');
+        for (let i = 0; i < 28; i++) {
+            const d = document.createElement('div');
+            d.className = 'star-dot';
+            const s = Math.random() * 4 + 2;
+            d.style.cssText = `width:${s}px;height:${s}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${Math.random()*3+2}s;--delay:${Math.random()*4}s;opacity:${Math.random()*0.5+0.2}`;
+            field.appendChild(d);
+        }
+    })();
+
+    function shuffleBoxData() {
+        for (let i = boxData.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [boxData[i], boxData[j]] = [boxData[j], boxData[i]];
+        }
+    }
+
+    function updateProgress() {
+        const count = currentRound.length;
+        for (let i = 0; i < 3; i++) {
+            const dot = document.getElementById('dot' + i);
+            if (dot) dot.classList.toggle('filled', i < count);
+        }
+        document.getElementById('progressText').textContent = `本轮 ${count} / 3`;
+    }
+
+    function createBoxes() {
+        const container = document.getElementById('boxesContainer');
+        container.innerHTML = '';
+        boxData.forEach((data, index) => {
+            const box = document.createElement('div');
+            box.className = `box ${openedBoxes.has(index) ? 'opened' : ''}`;
+            box.innerHTML = `<div class="box-content">${openedBoxes.has(index) ? data.emoji : '🐑'}</div>`;
+            box.onclick = () => openBox(index);
+            container.appendChild(box);
+        });
+        updateProgress();
+    }
+
+    function openBox(index) {
+        if (openedBoxes.has(index)) return;
+        if (currentRound.length >= MAX_OPEN) {
+            const box = document.querySelectorAll('.box')[index];
+            box.style.transition = 'transform 0.1s';
+            box.style.transform = 'scale(0.93)';
+            setTimeout(() => { box.style.transform = ''; }, 200);
+            return;
+        }
+        openCount++;
+        const box = document.querySelectorAll('.box')[index];
+        box.classList.add('shaking');
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            box.classList.remove('shaking');
+            createParticles(box);
+            openedBoxes.add(index);
+            currentRound.push(index);
+            box.classList.add('opened');
+            updateProgress();
+            showModal(index, boxData[index]);
+        }, 500);
+    }
+
+    function createParticles(box) {
+        const rect = box.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const symbols = ['✦', '⭐', '💫', '🌟', '✨', '🐚', '🪷'];
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'sparkle';
+            p.style.left = cx + 'px';
+            p.style.top = cy + 'px';
+            p.style.fontSize = (Math.random() * 16 + 10) + 'px';
+            p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+            p.style.color = ['#9D78C2','#CFAEE0','#F2E8D8','#E5E1F0','#B890D8'][Math.floor(Math.random() * 5)];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 160 + 60;
+            p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+            p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+            p.style.animation = `drift ${Math.random() * 0.8 + 0.8}s ease-out forwards`;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1700);
+        }
+    }
+
+    function showModal(index, data) {
+        window.scrollTo(0, 0);
+
+        document.getElementById('modalEmoji').textContent = data.emoji;
+        document.getElementById('modalTitle').textContent = data.title;
+        document.getElementById('modalIntro').textContent = data.intro;
+        document.getElementById('rarityBadge').textContent = data.rarity;
+        const display = document.getElementById('imageDisplay');
+        if (data.image) {
+            display.innerHTML = `<img src="${data.image}" style="width:100%;height:100%;object-fit:contain;border-radius:18px;">`;
+        } else {
+            display.textContent = data.emoji;
+        }
+        document.getElementById('descriptionInput').value = data.desc || '';
+        document.body.style.overflow = 'hidden';
+        document.getElementById('modalOverlay').classList.add('active');
+        document.querySelector('.modal-content').scrollTop = 0;
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.querySelector('.modal-content').scrollTop = 0;
+        if (openCount > 0) openCount--;
+        document.body.style.overflow = '';
+        window.scrollTo({ top: 0, behavior: 'instant' });
+
+        if (currentRound.length === MAX_OPEN) {
+            setTimeout(() => showSummary(), 400);
+        }
+    }
+
+    function showSummary() {
+        const summaryData = currentRound.map(i => boxData[i]);
+        const overlay = document.getElementById('modalOverlay');
+        const modalContent = document.querySelector('.modal-content');
+
+        modalContent.innerHTML = `
+            <div style="text-align:center; padding: 4px 0;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--shell-purple);margin-bottom:10px;">✦ 莲咪抽抽乐 ✦</div>
+                <h2 style="font-size:20px;font-weight:800;background:linear-gradient(135deg,#9D78C2,#C490E0,#CFAEE0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;">我的结果</h2>
+                <p style="font-size:11px;color:var(--taro-purple);margin-bottom:20px;letter-spacing:1px;">— 正经抽抽乐，请关注咩咩放映机 —</p>
+
+                <div style="display:flex;justify-content:space-around;gap:10px;margin-bottom:20px;">
+                    ${summaryData.map(item => `
+                        <div style="flex:1;background:linear-gradient(160deg,#fff 0%,#F5EDFC 100%);border-radius:20px;padding:16px 6px 14px;border:1.5px solid rgba(207,174,224,0.6);box-shadow:0 6px 20px rgba(157,120,194,0.13);">
+                            <div style="font-size:38px;margin-bottom:8px;filter:drop-shadow(0 2px 6px rgba(157,120,194,0.2));">${item.emoji}</div>
+                            <div style="font-size:11px;font-weight:800;color:var(--deep-purple);line-height:1.4;margin-bottom:5px;">${item.title}</div>
+                            <div style="display:inline-block;font-size:9px;color:var(--shell-purple);background:rgba(207,174,224,0.2);border-radius:10px;padding:2px 7px;letter-spacing:0.5px;">${item.rarity}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="background:linear-gradient(135deg,rgba(207,174,224,0.15),rgba(242,232,216,0.2));border-radius:14px;padding:12px 16px;margin-bottom:22px;border:1px solid rgba(207,174,224,0.3);">
+                    <p style="font-size:12px;color:var(--shell-purple);line-height:1.7;margin:0;">
+                        🎉 恭喜完成本轮抽取，可以用这些东西编个小故事吗？<br>
+                        <span style="font-size:11px;color:var(--taro-purple);">与莲莲的故事未完待续 ✨</span>
+                    </p>
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button class="btn btn-primary" id="nextRoundBtn">✨ 开启下一轮</button>
+                </div>
+            </div>
+        `;
+
+        document.body.style.overflow = 'hidden';
+        overlay.classList.add('active');
+        modalContent.scrollTop = 0;
+
+        document.getElementById('nextRoundBtn').onclick = () => {
+            currentRound = [];
+            openCount = 0;
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            shuffleBoxData();
+            openedBoxes.clear();
+            rebuildModal();
+            createBoxes();
+            updateProgress();
+        };
+    }
+
+    function rebuildModal() {
+        const modalContent = document.querySelector('.modal-content');
+        modalContent.innerHTML = `
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <div class="modal-halo"></div>
+                <span class="modal-emoji" id="modalEmoji">🐚</span>
+                <h2 class="modal-title" id="modalTitle">贝壳的故事</h2>
+                <p class="modal-intro" id="modalIntro">来自深海的礼物</p>
+                <div class="rarity-badge" id="rarityBadge">✦ 珍藏款 ✦</div>
+            </div>
+            <div class="pearl-divider">
+                <div class="pd-line"></div>
+                <div class="pd-pearl"></div>
+                <div class="pd-pearl"></div>
+                <div class="pd-pearl"></div>
+                <div class="pd-line"></div>
+            </div>
+            <div class="image-section">
+                <div class="concept-label">✦ 概念</div>
+                <div class="image-display" id="imageDisplay">🐚</div>
+            </div>
+            <div class="description-section">
+                <div class="section-label">✦ 详情</div>
+                <textarea class="description-input" id="descriptionInput" placeholder="写下你的专属解说词，记录这一刻的心情 ✨"></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="closeModal()">✓ 完成</button>
+            </div>
+        `;
+    }
+
+    function resetAll() {
+        openedBoxes.clear();
+        currentRound = [];
+        openCount = 0;
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+        rebuildModal();
+        createBoxes();
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    shuffleBoxData();
+    createBoxes();
+
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('modalOverlay')) closeModal();
+    });
+</script>
+</body>
+</html>
